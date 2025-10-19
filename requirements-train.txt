@@ -1,0 +1,5 @@
+# Optional training dependencies (only needed if you will train a model)
+scikit-learn>=1.4.0
+numpy>=1.26.0
+pandas>=2.2.0
+joblib>=1.4.0
