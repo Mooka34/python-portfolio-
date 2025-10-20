@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0ea5e9" />
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/static/icon-192.png">
+  <title>Fake Job Posting Detector</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header class="container">
+    <h1>Fake Job Posting Detector</h1>
+    <p>Paste a job posting to check if it's likely fake or real.</p>
+  </header>
+  <main class="container">
+    <form id="job-form">
+      <div class="grid">
+        <label>
+          <span>Title</span>
+          <input type="text" id="title" required placeholder="e.g., Remote Data Entry Clerk" />
+        </label>
+        <label>
+          <span>Company</span>
+          <input type="text" id="company" required placeholder="e.g., Acme Corp" />
+        </label>
+      </div>
+      <label>
+        <span>Description</span>
+        <textarea id="description" rows="8" required placeholder="Paste the full job description..."></textarea>
+      </label>
+      <div class="grid">
+        <label>
+          <span>Salary (optional)</span>
+          <input type="text" id="salary" placeholder="$1000 per day" />
+        </label>
+        <label>
+          <span>Location (optional)</span>
+          <input type="text" id="location" placeholder="Remote / New York, USA" />
+        </label>
+      </div>
+      <label>
+        <span>Link (optional)</span>
+        <input type="url" id="link" placeholder="https://example.com/job/123" />
+      </label>
+      <button type="submit" id="checkBtn">Check posting</button>
+    </form>
+
+    <section id="result" class="hidden">
+      <h2>Result</h2>
+      <div id="labelBadge" class="badge"></div>
+      <div class="probs">
+        <div class="prob"><span>Fake</span><div class="bar"><div id="barFake"></div></div><span id="txtFake">0%</span></div>
+        <div class="prob"><span>Real</span><div class="bar"><div id="barReal"></div></div><span id="txtReal">0%</span></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="container">
+    <p>Install this as an app on iOS/Android from your browser menu.</p>
+  </footer>
+
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js');
+  }
+
+  const form = document.getElementById('job-form');
+  const resultEl = document.getElementById('result');
+  const labelBadge = document.getElementById('labelBadge');
+  const barFake = document.getElementById('barFake');
+  const barReal = document.getElementById('barReal');
+  const txtFake = document.getElementById('txtFake');
+  const txtReal = document.getElementById('txtReal');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      title: document.getElementById('title').value.trim(),
+      company: document.getElementById('company').value.trim(),
+      description: document.getElementById('description').value.trim(),
+      salary: document.getElementById('salary').value.trim() || null,
+      location: document.getElementById('location').value.trim() || null,
+      link: document.getElementById('link').value.trim() || null,
+    };
+
+    const btn = document.getElementById('checkBtn');
+    btn.disabled = true; btn.textContent = 'Checking...';
+    try {
+      const res = await fetch('/api/predict', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      const fakePct = Math.round((data.scores.fake || 0) * 100);
+      const realPct = Math.round((data.scores.real || 0) * 100);
+      labelBadge.textContent = data.label.toUpperCase() + ' • ' + Math.round((data.confidence||0)*100) + '%';
+      labelBadge.className = 'badge ' + (data.label === 'fake' ? 'danger' : 'success');
+      barFake.style.width = fakePct + '%'; txtFake.textContent = fakePct + '%';
+      barReal.style.width = realPct + '%'; txtReal.textContent = realPct + '%';
+      resultEl.classList.remove('hidden');
+    } catch (err) {
+      alert('Request failed. Is the server running?');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Check posting';
+    }
+  });
+  </script>
+</body>
+</html>
