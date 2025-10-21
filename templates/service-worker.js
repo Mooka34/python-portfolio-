@@ -2,7 +2,9 @@ const CACHE = 'fake-jobs-v1';
 const ASSETS = [
   '/',
   '/manifest.webmanifest',
-  '/static/styles.css'
+  '/static/styles.css',
+  '/static/icon-192.png',
+  '/static/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {

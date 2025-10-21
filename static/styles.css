@@ -20,3 +20,6 @@ button:disabled{opacity:.6;cursor:wait}
 .prob{display:flex;align-items:center;gap:.5rem;margin:.25rem 0}
 .bar{flex:1;height:12px;background:#e2e8f0;border-radius:999px;overflow:hidden}
 .bar>div{height:100%;background:#0ea5e9;width:0;transition:width .3s ease}
+
+/* iOS safe-area support */
+body{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
