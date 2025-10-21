@@ -10,6 +10,11 @@ orientation = portrait
 fullscreen = 0
 icon.filename = assets/icon.png
 
+# Optimize APK size
+android.archs = armeabi-v7a, arm64-v8a
+android.api = 29
+android.minapi = 21
+
 [buildozer]
 log_level = 2
 warn_on_root = 0
