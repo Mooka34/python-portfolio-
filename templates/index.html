@@ -4,8 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#0ea5e9" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="FakeJobs" />
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/static/icon-192.png">
+  <link rel="apple-touch-icon" href="/static/icon-192.png">
   <title>Fake Job Posting Detector</title>
   <link rel="stylesheet" href="/static/styles.css" />
 </head>
@@ -61,6 +66,33 @@
     <p>Install this as an app on iOS/Android from your browser menu.</p>
   </footer>
 
+  <!-- Install banner (Android/Chrome) -->
+  <div id="installBanner" class="install-banner hidden" role="dialog" aria-live="polite">
+    <div class="install-banner-content">
+      <div class="install-banner-text">
+        <strong>Get the app</strong>
+        <span>Install for a faster, app-like experience on phone or tablet.</span>
+      </div>
+      <div class="install-banner-actions">
+        <button id="btnInstall" class="btn-primary">Install app</button>
+        <button id="btnContinue" class="btn-ghost">Continue on website</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- iOS Add to Home Screen hint -->
+  <div id="iosA2HS" class="install-banner hidden" role="dialog" aria-live="polite">
+    <div class="install-banner-content">
+      <div class="install-banner-text">
+        <strong>Add to Home Screen</strong>
+        <span>On iOS: tap the share icon, then "Add to Home Screen".</span>
+      </div>
+      <div class="install-banner-actions">
+        <button id="btnIosGotIt" class="btn-primary">Got it</button>
+      </div>
+    </div>
+  </div>
+
   <script>
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/service-worker.js');
@@ -104,6 +136,84 @@
       alert('Request failed. Is the server running?');
     } finally {
       btn.disabled = false; btn.textContent = 'Check posting';
+    }
+  });
+
+  // PWA install flow: show banner with Install vs Continue options
+  let deferredPrompt = null;
+  const installBanner = document.getElementById('installBanner');
+  const iosBanner = document.getElementById('iosA2HS');
+  const btnInstall = document.getElementById('btnInstall');
+  const btnContinue = document.getElementById('btnContinue');
+  const btnIosGotIt = document.getElementById('btnIosGotIt');
+
+  const inStandaloneMode = () => (
+    window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
+  );
+
+  function showInstallBanner() {
+    if (localStorage.getItem('pwaPromptDismissed') === 'true') return;
+    installBanner?.classList.remove('hidden');
+    document.body.classList.add('with-install-banner');
+  }
+  function hideInstallBanner() {
+    installBanner?.classList.add('hidden');
+    document.body.classList.remove('with-install-banner');
+  }
+  function showIosBanner() {
+    if (localStorage.getItem('pwaPromptDismissed') === 'true') return;
+    iosBanner?.classList.remove('hidden');
+    document.body.classList.add('with-install-banner');
+  }
+  function hideIosBanner() {
+    iosBanner?.classList.add('hidden');
+    document.body.classList.remove('with-install-banner');
+  }
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (!inStandaloneMode()) {
+      showInstallBanner();
+    }
+  });
+
+  window.addEventListener('appinstalled', () => {
+    localStorage.setItem('pwaPromptDismissed', 'true');
+    hideInstallBanner();
+    hideIosBanner();
+  });
+
+  btnInstall?.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    try {
+      await deferredPrompt.userChoice;
+    } catch (err) {
+      // ignore
+    }
+    deferredPrompt = null;
+    hideInstallBanner();
+    localStorage.setItem('pwaPromptDismissed', 'true');
+  });
+
+  btnContinue?.addEventListener('click', () => {
+    hideInstallBanner();
+    localStorage.setItem('pwaPromptDismissed', 'true');
+  });
+
+  btnIosGotIt?.addEventListener('click', () => {
+    hideIosBanner();
+    localStorage.setItem('pwaPromptDismissed', 'true');
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (inStandaloneMode()) return;
+    const ua = navigator.userAgent || '';
+    const isIos = /iphone|ipad|ipod/i.test(ua);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+    if (isIos && isSafari && localStorage.getItem('pwaPromptDismissed') !== 'true') {
+      showIosBanner();
     }
   });
   </script>
