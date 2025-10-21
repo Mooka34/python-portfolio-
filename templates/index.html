@@ -15,44 +15,78 @@
     <p>Paste a job posting to check if it's likely fake or real.</p>
   </header>
   <main class="container">
-    <form id="job-form">
-      <div class="grid">
-        <label>
-          <span>Title</span>
-          <input type="text" id="title" required placeholder="e.g., Remote Data Entry Clerk" />
-        </label>
-        <label>
-          <span>Company</span>
-          <input type="text" id="company" required placeholder="e.g., Acme Corp" />
-        </label>
-      </div>
-      <label>
-        <span>Description</span>
-        <textarea id="description" rows="8" required placeholder="Paste the full job description..."></textarea>
-      </label>
-      <div class="grid">
-        <label>
-          <span>Salary (optional)</span>
-          <input type="text" id="salary" placeholder="$1000 per day" />
-        </label>
-        <label>
-          <span>Location (optional)</span>
-          <input type="text" id="location" placeholder="Remote / New York, USA" />
-        </label>
-      </div>
-      <label>
-        <span>Link (optional)</span>
-        <input type="url" id="link" placeholder="https://example.com/job/123" />
-      </label>
-      <button type="submit" id="checkBtn">Check posting</button>
-    </form>
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab active" data-target="single" role="tab" aria-selected="true">Single check</button>
+      <button type="button" class="tab" data-target="bulk" role="tab" aria-selected="false">Bulk check</button>
+    </div>
 
-    <section id="result" class="hidden">
-      <h2>Result</h2>
-      <div id="labelBadge" class="badge"></div>
-      <div class="probs">
-        <div class="prob"><span>Fake</span><div class="bar"><div id="barFake"></div></div><span id="txtFake">0%</span></div>
-        <div class="prob"><span>Real</span><div class="bar"><div id="barReal"></div></div><span id="txtReal">0%</span></div>
+    <section id="single" class="tab-panel active" role="tabpanel" aria-labelledby="single-tab">
+      <form id="job-form">
+        <div class="grid">
+          <label>
+            <span>Title</span>
+            <input type="text" id="title" required placeholder="e.g., Remote Data Entry Clerk" />
+          </label>
+          <label>
+            <span>Company</span>
+            <input type="text" id="company" required placeholder="e.g., Acme Corp" />
+          </label>
+        </div>
+        <label>
+          <span>Description</span>
+          <textarea id="description" rows="8" required placeholder="Paste the full job description..."></textarea>
+        </label>
+        <div class="grid">
+          <label>
+            <span>Salary (optional)</span>
+            <input type="text" id="salary" placeholder="$1000 per day" />
+          </label>
+          <label>
+            <span>Location (optional)</span>
+            <input type="text" id="location" placeholder="Remote / New York, USA" />
+          </label>
+        </div>
+        <label>
+          <span>Link (optional)</span>
+          <input type="url" id="link" placeholder="https://example.com/job/123" />
+        </label>
+        <button type="submit" id="checkBtn">Check posting</button>
+      </form>
+
+      <section id="result" class="hidden">
+        <h2>Result</h2>
+        <div id="labelBadge" class="badge"></div>
+        <div class="probs">
+          <div class="prob"><span>Fake</span><div class="bar"><div id="barFake"></div></div><span id="txtFake">0%</span></div>
+          <div class="prob"><span>Real</span><div class="bar"><div id="barReal"></div></div><span id="txtReal">0%</span></div>
+        </div>
+      </section>
+    </section>
+
+    <section id="bulk" class="tab-panel" role="tabpanel" aria-labelledby="bulk-tab">
+      <div class="bulk-controls">
+        <button type="button" id="addRowBtn">Add row</button>
+        <button type="button" id="sampleRowsBtn">Sample rows</button>
+        <button type="button" id="clearRowsBtn">Clear rows</button>
+        <button type="button" id="checkAllBtn" class="primary">Check all</button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="jobs-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Company</th>
+              <th>Description</th>
+              <th>Salary</th>
+              <th>Location</th>
+              <th>Link</th>
+              <th>Result</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="jobsBody"></tbody>
+        </table>
       </div>
     </section>
   </main>
@@ -66,6 +100,22 @@
     navigator.serviceWorker.register('/service-worker.js');
   }
 
+  // Tabs
+  const tabButtons = document.querySelectorAll('.tabs [data-target]');
+  const tabPanels = document.querySelectorAll('.tab-panel');
+  tabButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      tabButtons.forEach((b) => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+      tabPanels.forEach((p) => p.classList.remove('active'));
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+      const target = btn.getAttribute('data-target');
+      const panel = document.getElementById(target);
+      if (panel) panel.classList.add('active');
+    });
+  });
+
+  // Single check form
   const form = document.getElementById('job-form');
   const resultEl = document.getElementById('result');
   const labelBadge = document.getElementById('labelBadge');
@@ -104,6 +154,102 @@
       alert('Request failed. Is the server running?');
     } finally {
       btn.disabled = false; btn.textContent = 'Check posting';
+    }
+  });
+
+  // Bulk check UI
+  const jobsBody = document.getElementById('jobsBody');
+  const addRowBtn = document.getElementById('addRowBtn');
+  const clearRowsBtn = document.getElementById('clearRowsBtn');
+  const checkAllBtn = document.getElementById('checkAllBtn');
+  const sampleRowsBtn = document.getElementById('sampleRowsBtn');
+
+  function escapeHtml(s) { return s.replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
+  function escapeAttr(s) { return s.replace(/"/g, '&quot;'); }
+
+  function createRow(data = {}) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" placeholder="Title" value="${escapeAttr(data.title || '')}" required></td>
+      <td><input type="text" placeholder="Company" value="${escapeAttr(data.company || '')}" required></td>
+      <td><textarea rows="3" placeholder="Description" required>${escapeHtml(data.description || '')}</textarea></td>
+      <td><input type="text" placeholder="Salary" value="${escapeAttr(data.salary || '')}"></td>
+      <td><input type="text" placeholder="Location" value="${escapeAttr(data.location || '')}"></td>
+      <td><input type="url" placeholder="Link" value="${escapeAttr(data.link || '')}"></td>
+      <td class="row-result">
+        <div class="badge muted">—</div>
+        <div class="row-bars">
+          <div class="row-prob"><span>Fake</span><div class="row-bar"><div class="row-bar-fake"></div></div><span class="row-txt-fake">0%</span></div>
+          <div class="row-prob"><span>Real</span><div class="row-bar"><div class="row-bar-real"></div></div><span class="row-txt-real">0%</span></div>
+        </div>
+      </td>
+      <td><button type="button" class="danger-link remove-row">Remove</button></td>
+    `;
+    tr.querySelector('.remove-row').addEventListener('click', () => tr.remove());
+    return tr;
+  }
+
+  addRowBtn.addEventListener('click', () => jobsBody.appendChild(createRow()));
+  clearRowsBtn.addEventListener('click', () => { jobsBody.innerHTML = ''; });
+  sampleRowsBtn.addEventListener('click', () => {
+    jobsBody.appendChild(createRow({ title: 'Remote Data Entry Clerk', company: 'Acme', description: 'Work from home and earn $1000 per day. Contact via WhatsApp.' }));
+    jobsBody.appendChild(createRow({ title: 'Senior Backend Engineer', company: 'Globex', description: 'Build APIs in Python, 5+ years experience. Competitive salary, full benefits.' }));
+  });
+
+  async function checkRow(tr) {
+    const [titleEl, companyEl, descEl, salaryEl, locationEl, linkEl] = tr.querySelectorAll('input, textarea');
+    const payload = {
+      title: titleEl.value.trim(),
+      company: companyEl.value.trim(),
+      description: descEl.value.trim(),
+      salary: salaryEl.value.trim() || null,
+      location: locationEl.value.trim() || null,
+      link: linkEl.value.trim() || null,
+    };
+    const badge = tr.querySelector('.badge');
+    const barFake = tr.querySelector('.row-bar-fake');
+    const barReal = tr.querySelector('.row-bar-real');
+    const txtFake = tr.querySelector('.row-txt-fake');
+    const txtReal = tr.querySelector('.row-txt-real');
+
+    if (!payload.title || !payload.company || !payload.description) {
+      badge.textContent = 'Missing fields';
+      badge.className = 'badge danger';
+      return { ok: false };
+    }
+
+    badge.textContent = 'Checking...';
+    badge.className = 'badge muted';
+
+    try {
+      const res = await fetch('/api/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      const fakePct = Math.round((data.scores.fake || 0) * 100);
+      const realPct = Math.round((data.scores.real || 0) * 100);
+      badge.textContent = data.label.toUpperCase() + ' • ' + Math.round((data.confidence || 0) * 100) + '%';
+      badge.className = 'badge ' + (data.label === 'fake' ? 'danger' : 'success');
+      barFake.style.width = fakePct + '%'; txtFake.textContent = fakePct + '%';
+      barReal.style.width = realPct + '%'; txtReal.textContent = realPct + '%';
+      return { ok: true };
+    } catch (e) {
+      badge.textContent = 'Error';
+      badge.className = 'badge danger';
+      return { ok: false, error: e };
+    }
+  }
+
+  document.getElementById('checkAllBtn').addEventListener('click', async () => {
+    const rows = Array.from(jobsBody.querySelectorAll('tr'));
+    if (rows.length === 0) { alert('Add at least one row'); return; }
+    checkAllBtn.disabled = true; checkAllBtn.textContent = 'Checking...';
+    try {
+      await Promise.allSettled(rows.map(checkRow));
+    } finally {
+      checkAllBtn.disabled = false; checkAllBtn.textContent = 'Check all';
     }
   });
   </script>
