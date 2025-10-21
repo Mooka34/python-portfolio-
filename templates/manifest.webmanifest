@@ -1,12 +1,19 @@
 {
+  "id": "/",
   "name": "Fake Job Posting Detector",
   "short_name": "FakeJobs",
-  "start_url": "/",
+  "description": "Check if a job posting is likely fake or real.",
+  "scope": "/",
+  "start_url": "/?source=pwa",
   "display": "standalone",
+  "display_override": ["standalone"],
+  "orientation": "any",
   "background_color": "#0ea5e9",
   "theme_color": "#0ea5e9",
+  "categories": ["business", "productivity"],
   "icons": [
-    { "src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/static/icon-512.png", "sizes": "512x512", "type": "image/png" }
-  ]
+    { "src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/static/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "prefer_related_applications": false
 }
