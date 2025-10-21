@@ -1,0 +1,73 @@
+#:kivy 2.3.0
+#:import MDScrollView kivymd.uix.scrollview.MDScrollView
+
+<DetectScreen>:
+    name: "detect"
+
+    MDBoxLayout:
+        orientation: "vertical"
+        padding: dp(12)
+        spacing: dp(12)
+
+        MDLabel:
+            text: "Fake Job Posting Detector"
+            halign: "center"
+            font_style: "H5"
+
+        MDScrollView:
+            MDBoxLayout:
+                id: form
+                orientation: "vertical"
+                spacing: dp(8)
+                size_hint_y: None
+                height: self.minimum_height
+
+                MDTextField:
+                    id: title
+                    hint_text: "Job Title"
+                    helper_text: "e.g., Remote Data Entry Clerk"
+                    helper_text_mode: "on_focus"
+
+                MDTextField:
+                    id: company
+                    hint_text: "Company"
+
+                MDTextField:
+                    id: description
+                    hint_text: "Description"
+                    multiline: True
+                    min_height: dp(120)
+                    size_hint_y: None
+                    height: dp(160)
+
+                MDTextField:
+                    id: salary
+                    hint_text: "Salary (optional)"
+
+                MDTextField:
+                    id: location
+                    hint_text: "Location (optional)"
+
+                MDTextField:
+                    id: link
+                    hint_text: "Link (optional)"
+
+                MDRaisedButton:
+                    text: "Detect"
+                    on_release: root.on_detect()
+
+                MDSeparator:
+                    height: dp(1)
+
+                MDLabel:
+                    id: result
+                    text: ""
+                    halign: "center"
+                    theme_text_color: "Primary"
+                    bold: True
+
+                MDLabel:
+                    id: scores
+                    text: ""
+                    halign: "center"
+                    theme_text_color: "Secondary"
