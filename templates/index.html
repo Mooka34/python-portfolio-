@@ -13,6 +13,7 @@
   <header class="container">
     <h1>Fake Job Posting Detector</h1>
     <p>Paste a job posting to check if it's likely fake or real.</p>
+    <button id="installBtn" class="install-btn hidden">Install app</button>
   </header>
   <main class="container">
     <div class="tabs" role="tablist">
@@ -100,6 +101,23 @@
     navigator.serviceWorker.register('/service-worker.js');
   }
 
+  // PWA install prompt
+  const installBtn = document.getElementById('installBtn');
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.classList.remove('hidden');
+  });
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    installBtn.disabled = true;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    installBtn.classList.add('hidden');
+  });
+
   // Tabs
   const tabButtons = document.querySelectorAll('.tabs [data-target]');
   const tabPanels = document.querySelectorAll('.tab-panel');
@@ -112,8 +130,15 @@
       const target = btn.getAttribute('data-target');
       const panel = document.getElementById(target);
       if (panel) panel.classList.add('active');
+      // update hash for deep link
+      if (target) location.hash = target;
     });
   });
+
+  // Deep link to tab via hash
+  const initialHash = location.hash.replace('#', '');
+  const initialBtn = document.querySelector(`.tabs [data-target="${initialHash}"]`);
+  if (initialBtn) initialBtn.click();
 
   // Single check form
   const form = document.getElementById('job-form');

@@ -50,3 +50,9 @@ async def manifest():
 @app.get("/service-worker.js")
 async def service_worker():
     return FileResponse("templates/service-worker.js", media_type="application/javascript")
+
+
+@app.get("/offline.html", response_class=HTMLResponse)
+async def offline_page(request: Request):
+    # Served for the service worker offline fallback
+    return templates.TemplateResponse("offline.html", {"request": request})
