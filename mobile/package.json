@@ -1,0 +1,24 @@
+{
+  "name": "fake-jobs-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Capacitor wrapper for Fake Job Posting Detector",
+  "license": "MIT",
+  "scripts": {
+    "cap:add:android": "npx cap add android",
+    "cap:add:ios": "npx cap add ios",
+    "cap:sync": "npx cap sync",
+    "cap:open:android": "npx cap open android",
+    "cap:open:ios": "npx cap open ios",
+    "cap:doctor": "npx cap doctor"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.1.0",
+    "@capacitor/core": "^6.1.0",
+    "@capacitor/ios": "^6.1.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.0",
+    "typescript": "^5.5.0"
+  }
+}
