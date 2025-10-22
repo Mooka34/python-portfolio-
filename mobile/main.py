@@ -44,6 +44,9 @@ class FakeJobApp(MDApp):
         self.title = "Fake Job Detector"
         self.icon = "assets/icon.png"
         Window.minimum_width, Window.minimum_height = 360, 640
+        # Prefer light theme with primary color close to web app
+        self.theme_cls.primary_palette = "LightBlue"
+        self.theme_cls.theme_style = "Light"
         Builder.load_file("ui.kv")
         return DetectScreen()
 

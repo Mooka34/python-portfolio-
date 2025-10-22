@@ -9,10 +9,12 @@
         padding: dp(12)
         spacing: dp(12)
 
-        MDLabel:
-            text: "Fake Job Posting Detector"
-            halign: "center"
-            font_style: "H5"
+    MDLabel:
+        text: "Fake Job Posting Detector"
+        halign: "center"
+        font_style: "H5"
+        size_hint_y: None
+        height: self.texture_size[1] + dp(8)
 
         MDScrollView:
             MDBoxLayout:
@@ -27,10 +29,14 @@
                     hint_text: "Job Title"
                     helper_text: "e.g., Remote Data Entry Clerk"
                     helper_text_mode: "on_focus"
+                    size_hint_y: None
+                    height: dp(56)
 
                 MDTextField:
                     id: company
                     hint_text: "Company"
+                    size_hint_y: None
+                    height: dp(56)
 
                 MDTextField:
                     id: description
@@ -43,17 +49,25 @@
                 MDTextField:
                     id: salary
                     hint_text: "Salary (optional)"
+                    size_hint_y: None
+                    height: dp(56)
 
                 MDTextField:
                     id: location
                     hint_text: "Location (optional)"
+                    size_hint_y: None
+                    height: dp(56)
 
                 MDTextField:
                     id: link
                     hint_text: "Link (optional)"
+                    size_hint_y: None
+                    height: dp(56)
 
                 MDRaisedButton:
                     text: "Detect"
+                    pos_hint: {"center_x": .5}
+                    size_hint_x: 1
                     on_release: root.on_detect()
 
                 MDSeparator:

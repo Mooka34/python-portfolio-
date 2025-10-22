@@ -3,6 +3,7 @@
   "short_name": "FakeJobs",
   "start_url": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0ea5e9",
   "theme_color": "#0ea5e9",
   "icons": [
